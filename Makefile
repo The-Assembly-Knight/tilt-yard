@@ -5,7 +5,7 @@ CFLAGS = -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wshadow \
 -Wstrict-prototypes -Werror -g -O2 -std=gnu99
 
 # Source and object files
-SRC = main.c
+SRC = main.c src/tiltyard_API.c
 OBJ = $(SRC:.c=.o)
 TARGET = combo
 
