@@ -47,6 +47,33 @@ void tiltyard_reset(Yard *yard)
 
 void tiltyard_destroy(Yard *yard) 
 {
+	if (!yard) return;
+
 	free(yard->base);
 	free(yard);
 }
+
+void tiltyard_obliterate(Yard **yard)
+{
+	if (!yard || !*yard) return;
+
+	tiltyard_destroy(*yard);
+	*yard = NULL;
+}
+
+void tiltyard_obliterate_cleaning(Yard **yard)
+{
+	if (!yard || !*yard) return;
+
+	memset((*yard)->base, 0, (*yard)->offset);
+	tiltyard_obliterate(yard);
+}
+
+size_t tiltyard_marker(Yard *yard)
+{
+	if (!yard) return 0;
+
+	return yard->offset;
+}
+
+
