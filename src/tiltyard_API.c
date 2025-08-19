@@ -69,11 +69,19 @@ void tiltyard_obliterate_cleaning(Yard **yard)
 	tiltyard_obliterate(yard);
 }
 
-size_t tiltyard_marker(Yard *yard)
+ssize_t tiltyard_marker(Yard *yard)
 {
-	if (!yard) return 0;
+	if (!yard) return -1;
 
-	return yard->offset;
+	return (ssize_t)yard->offset;
+}
+
+void tiltyard_reset_to(Yard *yard, ssize_t marker)
+{
+	if (marker < 0 || (size_t)marker > yard->capacity)
+		return;
+	
+	yard->offset = (size_t)marker;
 }
 
 
