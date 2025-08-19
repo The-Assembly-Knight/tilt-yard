@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -58,48 +59,62 @@ void tiltyard_destroy(Yard *yard)
 	free(yard);
 }
 
+void tiltyard_wipe(Yard *yard)
+{
+	if (!yard) return;
+
+	memset(yard->base, 0, yard->capacity);
+}
+
+void tiltyard_null(Yard **yard)
+{	
+	if (!yard) return;
+
+	*yard = NULL;
+}
+
 void tiltyard_destroy_and_null(Yard **yard)
 {
 	if (!yard || !*yard) return;
 
 	tiltyard_destroy(*yard);
-	*yard = NULL;
+	tiltyard_null(yard);
 }
 
-void tiltyard_destroy_and_clean(Yard *yard)
+void tiltyard_destroy_wipe_and_null(Yard **yard)
 {
-	if (!yard) return;
+	if (!yard || !*yard) return;
 
-	memset(yard->base, 0, yard->offset);
-	tiltyard_destroy(yard);
+	tiltyard_wipe(*yard);
+	tiltyard_destroy_and_null(yard);
 }
 
-ssize_t tiltyard_marker(Yard *yard)
+size_t tiltyard_get_marker(Yard *yard)
 {
-	if (!yard) return -1;
+	if (!yard) return SIZE_MAX;
 
-	return (ssize_t)yard->offset;
+	return yard->offset;
 }
 
-void tiltyard_reset_to(Yard *yard, ssize_t marker)
+void tiltyard_reset_to(Yard *yard, size_t marker)
 {
-	if (!yard || marker < 0 || (size_t)marker > yard->capacity)
+	if (!yard || marker > yard->capacity)
 		return;
 	
-	yard->offset = (size_t)marker;
+	yard->offset = marker;
 }
 
-void tiltyard_clean_until(Yard *yard, ssize_t marker)
+void tiltyard_clean_until(Yard *yard, size_t marker)
 {
-	if (!yard || marker <= 0 || (size_t)marker > yard->capacity)
+	if (!yard || marker <= 0 || marker > yard->capacity)
 		return;
 	
 	memset(yard->base, 0, marker);
 }
 
-void tiltyard_clean_from(Yard *yard, ssize_t marker)
+void tiltyard_clean_from(Yard *yard, size_t marker)
 {
-	if (marker >= yard->capacity)
+	if (!yard || marker >= yard->capacity)
 		return;
 	
 	memset((char *)yard->base + marker, 0, yard->capacity - marker);
