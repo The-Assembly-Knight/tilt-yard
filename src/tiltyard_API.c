@@ -20,7 +20,7 @@ Yard *tiltyard_create(size_t capacity)
 
 void *tiltyard_alloc(Yard *yard, size_t size)
 {
-	if (yard->offset + size > yard->capacity)
+	if (!yard || yard->offset + size > yard->capacity || size == 0)
 		return NULL;
 
 	void *ptr = yard->base + yard->offset;

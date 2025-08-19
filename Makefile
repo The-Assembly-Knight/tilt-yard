@@ -7,7 +7,7 @@ CFLAGS = -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wshadow \
 # Source and object files
 SRC = main.c src/tiltyard_API.c
 OBJ = $(SRC:.c=.o)
-TARGET = combo
+TARGET = tiltyard
 
 # Build target
 $(TARGET): $(OBJ)
