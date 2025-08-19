@@ -1,4 +1,5 @@
 #include <mm_malloc.h>
+#include <string.h>
 
 #include "../include/tiltyard_API.h"
 
@@ -25,6 +26,17 @@ void *tiltyard_alloc(Yard *yard, size_t size)
 
 	void *ptr = yard->base + yard->offset;
 	yard->offset += size;
+	return ptr;
+}
+
+void *tiltyard_calloc(Yard *yard, size_t size)
+{
+	void *ptr = tiltyard_alloc(yard, size);
+
+	if (!ptr)
+		return NULL;
+
+	memset(ptr, 0, size);
 	return ptr;
 }
 
