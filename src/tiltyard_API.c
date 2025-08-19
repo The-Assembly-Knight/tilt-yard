@@ -1,10 +1,13 @@
-#include <mm_malloc.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "../include/tiltyard_API.h"
 
 Yard *tiltyard_create(size_t capacity)
 {
+	if (capacity == 0)
+		return NULL;
+
 	Yard *yard = malloc(sizeof(Yard));
 	if (!yard) return NULL;
 	
@@ -24,13 +27,15 @@ void *tiltyard_alloc(Yard *yard, size_t size)
 	if (!yard || yard->offset + size > yard->capacity || size == 0)
 		return NULL;
 
-	void *ptr = yard->base + yard->offset;
+	void *ptr = (char *)yard->base + yard->offset;
 	yard->offset += size;
 	return ptr;
 }
 
 void *tiltyard_calloc(Yard *yard, size_t size)
 {
+	if (!yard) return NULL;
+
 	void *ptr = tiltyard_alloc(yard, size);
 
 	if (!ptr)
@@ -42,7 +47,7 @@ void *tiltyard_calloc(Yard *yard, size_t size)
 
 void tiltyard_reset(Yard *yard)
 {
-	yard->offset = 0;
+	if (yard) yard->offset = 0;
 }
 
 void tiltyard_destroy(Yard *yard) 
@@ -53,7 +58,7 @@ void tiltyard_destroy(Yard *yard)
 	free(yard);
 }
 
-void tiltyard_obliterate(Yard **yard)
+void tiltyard_destroy_and_null(Yard **yard)
 {
 	if (!yard || !*yard) return;
 
@@ -61,12 +66,12 @@ void tiltyard_obliterate(Yard **yard)
 	*yard = NULL;
 }
 
-void tiltyard_obliterate_cleaning(Yard **yard)
+void tiltyard_destroy_and_clean(Yard *yard)
 {
-	if (!yard || !*yard) return;
+	if (!yard) return;
 
-	memset((*yard)->base, 0, (*yard)->offset);
-	tiltyard_obliterate(yard);
+	memset(yard->base, 0, yard->offset);
+	tiltyard_destroy(yard);
 }
 
 ssize_t tiltyard_marker(Yard *yard)
@@ -78,10 +83,24 @@ ssize_t tiltyard_marker(Yard *yard)
 
 void tiltyard_reset_to(Yard *yard, ssize_t marker)
 {
-	if (marker < 0 || (size_t)marker > yard->capacity)
+	if (!yard || marker < 0 || (size_t)marker > yard->capacity)
 		return;
 	
 	yard->offset = (size_t)marker;
 }
 
+void tiltyard_clean_until(Yard *yard, ssize_t marker)
+{
+	if (!yard || marker <= 0 || (size_t)marker > yard->capacity)
+		return;
+	
+	memset(yard->base, 0, marker);
+}
 
+void tiltyard_clean_from(Yard *yard, ssize_t marker)
+{
+	if (marker >= yard->capacity)
+		return;
+	
+	memset((char *)yard->base + marker, 0, yard->capacity - marker);
+}

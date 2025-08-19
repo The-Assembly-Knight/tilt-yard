@@ -43,6 +43,7 @@ int main(void)
 		printf("Value: %i\n", my_array[i]);
 	}
 
+	tiltyard_obliterate_cleaning(&main_yard);
 
 	return 0;
 }
