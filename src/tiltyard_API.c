@@ -145,3 +145,21 @@ void tiltyard_clean_from_until(Yard *yard, size_t marker_beg, size_t marker_end)
 
 	memset((char *)yard->base + marker_beg, 0, marker_end - marker_beg);
 }
+
+size_t tiltyard_used(Yard *yard)
+{
+	if (!yard) return SIZE_MAX;
+	return yard->offset;
+}
+
+size_t tiltyard_capacity(Yard *yard)
+{
+	if (!yard) return SIZE_MAX;
+	return yard->capacity;
+}
+
+size_t tiltyard_available(Yard *yard)
+{
+	if (!yard) return SIZE_MAX;
+	return yard->capacity - yard->offset;
+}

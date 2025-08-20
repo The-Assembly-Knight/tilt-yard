@@ -17,11 +17,7 @@ void tiltyard_null(Yard **yard);
 void tiltyard_destroy_and_null(Yard **yard);
 void tiltyard_destroy_wipe_and_null(Yard **yard);
 
-
 void tiltyard_reset(Yard *yard);
-
-void tiltyard_obliterate(Yard **yard);
-void tiltyard_obliterate_cleaning(Yard **yard);
 
 size_t tiltyard_get_marker(Yard *yard);
 void tiltyard_reset_to(Yard *yard, size_t marker);
@@ -29,3 +25,7 @@ void tiltyard_reset_to(Yard *yard, size_t marker);
 void tiltyard_clean_until(Yard *yard, size_t marker);
 void tiltyard_clean_from(Yard *yard, size_t marker);
 void tiltyard_clean_from_until(Yard *yard, size_t marker_beg, size_t marker_end);
+
+size_t tiltyard_used(Yard *yard);
+size_t tiltyard_capacity(Yard *yard);
+size_t tiltyard_available(Yard *yard);
