@@ -3,8 +3,12 @@
 #include "tiltyard_struct.h"
 
 Yard *tiltyard_create(size_t capacity);
+
 void *tiltyard_alloc(Yard *yard, size_t size);
 void *tiltyard_calloc(Yard *yard, size_t size);
+
+void *tiltyard_alloc_aligned(Yard *yard, size_t size, size_t alignment);
+void *tiltyard_calloc_aligned(Yard *yard, size_t size, size_t alignment);
 
 void tiltyard_destroy(Yard *yard);
 void tiltyard_wipe(Yard *yard);
@@ -12,9 +16,6 @@ void tiltyard_null(Yard **yard);
 
 void tiltyard_destroy_and_null(Yard **yard);
 void tiltyard_destroy_wipe_and_null(Yard **yard);
-
-
-
 
 
 void tiltyard_reset(Yard *yard);

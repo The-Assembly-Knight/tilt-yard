@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,22 +26,39 @@ Yard *tiltyard_create(size_t capacity)
 
 void *tiltyard_alloc(Yard *yard, size_t size)
 {
-	if (!yard || yard->offset + size > yard->capacity || size == 0)
-		return NULL;
-
-	void *ptr = (char *)yard->base + yard->offset;
-	yard->offset += size;
-	return ptr;
+	return tiltyard_alloc_aligned(yard, size, sizeof(void *));
 }
 
 void *tiltyard_calloc(Yard *yard, size_t size)
 {
-	if (!yard) return NULL;
-
 	void *ptr = tiltyard_alloc(yard, size);
 
-	if (!ptr)
+	if  (!ptr) return NULL;
+
+	memset(ptr, 0, size);
+	return ptr;
+}
+
+void *tiltyard_alloc_aligned(Yard *yard, size_t size, size_t alignment)
+{
+	if (!yard || size == 0 || alignment == 0 || (alignment & (alignment - 1)) != 0)
 		return NULL;
+
+	size_t aligned_offset = (yard->offset + alignment - 1) & ~(alignment - 1);
+
+	if (aligned_offset + size > yard->capacity)
+		return NULL;
+
+	void *ptr = (char *)yard->base + aligned_offset;
+	yard->offset = aligned_offset + size;
+	return ptr;
+}
+
+void *tiltyard_calloc_aligned(Yard *yard, size_t size, size_t alignment)
+{
+	void *ptr = tiltyard_alloc_aligned(yard, size, alignment);
+
+	if (!ptr) return NULL;
 
 	memset(ptr, 0, size);
 	return ptr;
