@@ -124,7 +124,7 @@ void tiltyard_reset_to(Yard *yard, size_t marker)
 
 void tiltyard_clean_until(Yard *yard, size_t marker)
 {
-	if (!yard || marker <= 0 || marker > yard->capacity)
+	if (!yard || marker == 0 || marker > yard->capacity)
 		return;
 	
 	memset(yard->base, 0, marker);
@@ -136,4 +136,12 @@ void tiltyard_clean_from(Yard *yard, size_t marker)
 		return;
 	
 	memset((char *)yard->base + marker, 0, yard->capacity - marker);
+}
+
+void tiltyard_clean_from_until(Yard *yard, size_t marker_beg, size_t marker_end)
+{
+	if (!yard || marker_beg >= marker_end || marker_beg >= yard->capacity || marker_end > yard->capacity)
+		return;
+
+	memset((char *)yard->base + marker_beg, 0, marker_end - marker_beg);
 }
