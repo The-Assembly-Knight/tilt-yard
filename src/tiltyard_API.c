@@ -42,7 +42,7 @@ Yard *tiltyard_create(size_t capacity)
 	return yard;
 }
 
-/* Allocate 'size' bytes from the yard with the default alignmnet
+/* Allocate 'size' bytes from the yard with the default alignment
  *
  * The default alignment is sizeof(void *).
  *
@@ -155,8 +155,8 @@ void *tiltyard_calloc_aligned(Yard *yard, size_t size, size_t alignment)
  *   please consider using 'tiltyard_null', 'tiltyard_destroy_and_null',
  *   or 'tiltyard_wipe_destroy_and_null'.
  * - Until the OS process that the memory was freed, it will still contain
- *   what it already had before freeing, in case you waant to zero what you
- *   wrote on that memory please considere using 'tiltyard_wipe'
+ *   what it already had before freeing, in case you want to zero what you
+ *   wrote on that memory please consider using 'tiltyard_wipe'
  *   or 'tiltyard_wipe_destroy_and_null'
  */
 void tiltyard_destroy(Yard *yard) 
@@ -216,6 +216,9 @@ void tiltyard_null(Yard **yard)
  * combines the behaviors of 'tiltyard_destroy' and
  * 'tiltyard_null' in that order.
  *
+ * Returns:
+ * - Nothing.
+ *
  * Notes:
  * - Take into account that the pointer to the yard
  *   will be null making it impossible to access the yard again.
@@ -255,10 +258,10 @@ void tiltyard_wipe_destroy_and_null(Yard **yard)
 
 /* Resets the current offset to 0
  *
- * Allows the user to reuse the arena from the beginnig
- * by reseting the offset to 0 if the 'yard' is not NULL.
+ * Allows the user to reuse the arena from the beginning
+ * by resetting the offset to 0 if the 'yard' is not NULL.
  *
- * Return:
+ * Returns:
  * - Nothing.
  *
  * Notes:
@@ -316,7 +319,10 @@ void tiltyard_reset_to(Yard *yard, size_t marker)
  * to the marker using memset if yard is not NULL, marker is not 0,
  * and marker is not > yard's capacity.
  *
- * Note:
+ * Returns:
+ * - Nothing.
+ *
+ * Notes:
  * - The data zeroed will not be recoverable through tiltyard by
  *   any means, which means the user should think twice before using
  *   this function.
@@ -335,7 +341,10 @@ void tiltyard_clean_until(Yard *yard, size_t marker)
  * to the end of the yard  using memset
  * if yard is not NULL, and the marker is <= yard's capacity.
  *
- * Note:
+ * Returns:
+ * - Nothing.
+ *
+ * Notes:
  * - The data zeroed will not be recoverable through tiltyard by
  *   any means, which means the user should think twice before using
  *   this function.
@@ -355,7 +364,10 @@ void tiltyard_clean_from(Yard *yard, size_t marker)
  * if yard is not NULL, 'maker_beg' < 'maker_end',
  * 'marker_beg' < yard's capacity, and 'marker_end' <= yard's capacity.
  *
- * Note:
+ * Returns:
+ * - Nothing.
+ *
+ * Notes:
  * - The data zeroed will not be recoverable through tiltyard by
  *   any means, which means the user should think twice before using
  *   this function.

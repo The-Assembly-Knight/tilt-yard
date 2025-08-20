@@ -15,7 +15,7 @@ void tiltyard_wipe(Yard *yard);
 void tiltyard_null(Yard **yard);
 
 void tiltyard_destroy_and_null(Yard **yard);
-void tiltyard_destroy_wipe_and_null(Yard **yard);
+void tiltyard_wipe_destroy_and_null(Yard **yard);
 
 void tiltyard_reset(Yard *yard);
 
