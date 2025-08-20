@@ -64,10 +64,6 @@ void *tiltyard_calloc_aligned(Yard *yard, size_t size, size_t alignment)
 	return ptr;
 }
 
-void tiltyard_reset(Yard *yard)
-{
-	if (yard) yard->offset = 0;
-}
 
 void tiltyard_destroy(Yard *yard) 
 {
@@ -105,6 +101,11 @@ void tiltyard_destroy_wipe_and_null(Yard **yard)
 
 	tiltyard_wipe(*yard);
 	tiltyard_destroy_and_null(yard);
+}
+
+void tiltyard_reset(Yard *yard)
+{
+	if (yard) yard->offset = 0;
 }
 
 size_t tiltyard_get_marker(Yard *yard)
@@ -146,19 +147,19 @@ void tiltyard_clean_from_until(Yard *yard, size_t marker_beg, size_t marker_end)
 	memset((char *)yard->base + marker_beg, 0, marker_end - marker_beg);
 }
 
-size_t tiltyard_used(Yard *yard)
+size_t tiltyard_get_used_capacity(Yard *yard)
 {
 	if (!yard) return SIZE_MAX;
 	return yard->offset;
 }
 
-size_t tiltyard_capacity(Yard *yard)
+size_t tiltyard_get_capacity(Yard *yard)
 {
 	if (!yard) return SIZE_MAX;
 	return yard->capacity;
 }
 
-size_t tiltyard_available(Yard *yard)
+size_t tiltyard_get_available_capacity(Yard *yard)
 {
 	if (!yard) return SIZE_MAX;
 	return yard->capacity - yard->offset;

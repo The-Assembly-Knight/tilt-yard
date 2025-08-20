@@ -37,6 +37,10 @@ int main(void)
 		printf("This is the value of the thing: %i\n", int_array[i]);
 	}
 
+	printf("Current occupied memory: %zu\n", tiltyard_get_used_capacity(main_yard));
+	printf("Current capacity: %zu\n", tiltyard_get_capacity(main_yard));
+	printf("Current available capacity: %zu\n", tiltyard_get_available_capacity(main_yard));
+
 	tiltyard_destroy_wipe_and_null(&main_yard);
 
 	return 0;

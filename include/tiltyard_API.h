@@ -26,6 +26,6 @@ void tiltyard_clean_until(Yard *yard, size_t marker);
 void tiltyard_clean_from(Yard *yard, size_t marker);
 void tiltyard_clean_from_until(Yard *yard, size_t marker_beg, size_t marker_end);
 
-size_t tiltyard_used(Yard *yard);
-size_t tiltyard_capacity(Yard *yard);
-size_t tiltyard_available(Yard *yard);
+size_t tiltyard_get_used_capacity(Yard *yard);
+size_t tiltyard_get_capacity(Yard *yard);
+size_t tiltyard_get_available_capacity(Yard *yard);
