@@ -5,6 +5,24 @@
 
 #include "../include/tiltyard_API.h"
 
+/* Check if a+b overflows size_t
+ *
+ * Adds a and b and checks if it overflows
+ * SIZE_MAX (which is the max size of size_t)
+ *
+ * Returns:
+ * - 1 if a+b overflows size_t.
+ * - 0 if a+b does not overflow size_t.
+ *
+ * Notes:
+ * - Nothing.
+ */
+static inline int size_add_overflow(size_t a, size_t b)
+{
+	if (a > SIZE_MAX - b) return 1;
+	return 0;
+}
+
 /* Create a new yard with size 'capacity'.
  *
  * Create space in the heap for the yard
@@ -114,7 +132,7 @@ void *tiltyard_alloc_aligned(Yard *yard, size_t size, size_t alignment)
 
 	size_t aligned_offset = (yard->offset + alignment - 1) & ~(alignment - 1);
 
-	if (aligned_offset + size > yard->capacity)
+	if (aligned_offset + size > yard->capacity || size_add_overflow(aligned_offset, size))
 		return NULL;
 
 	void *ptr = (char *)yard->base + aligned_offset;
