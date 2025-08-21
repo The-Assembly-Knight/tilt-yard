@@ -39,6 +39,9 @@ Yard *tiltyard_create(size_t capacity)
 
 	yard->capacity = capacity;
 	yard->offset = 0;
+	yard->last_alloc = 0;
+	yard->high_water = 0;
+	yard->alloc_count = 0;
 	return yard;
 }
 
@@ -91,6 +94,9 @@ void *tiltyard_calloc(Yard *yard, size_t size)
  * - The memory is aligned based on 'alignment' instead of a
  *   default one.
  *
+ * This function also assign stats such as last_alloc, alloc_count,
+ * and high_water to the yard for each allocation.
+ *
  * Returns:
  * - A pointer into the yard if there is enough capacity.
  * - NULL if there is not enough space or yard == NULL.
@@ -112,7 +118,11 @@ void *tiltyard_alloc_aligned(Yard *yard, size_t size, size_t alignment)
 		return NULL;
 
 	void *ptr = (char *)yard->base + aligned_offset;
+	yard->last_alloc = yard->offset;
+	yard->alloc_count++;
 	yard->offset = aligned_offset + size;
+	if (yard->offset > yard->high_water)
+		yard->high_water = yard->offset;
 	return ptr;
 }
 
@@ -380,25 +390,6 @@ void tiltyard_clean_from_until(Yard *yard, size_t marker_beg, size_t marker_end)
 	memset((char *)yard->base + marker_beg, 0, marker_end - marker_beg);
 }
 
-/* Returns the amount of bytes used already
- *
- * Returns yard's offset if yard is not NULL.
- *
- * Returns:
- * - SIZE_MAX if 'yard' is NULL.
- * - yard's offset if 'yard' is not NULL.
- *
- * Notes:
- *  - This function is meant to be used as a way to debug
- *  the yards already created and it will not affect nor change
- *  any aspect of the yard.
- */
-size_t tiltyard_get_used_capacity(Yard *yard)
-{
-	if (!yard) return SIZE_MAX;
-	return yard->offset;
-}
-
 /* Returns the capacity of the yard
  *
  * Returns yard's capacity if yard is not NULL.
@@ -418,9 +409,28 @@ size_t tiltyard_get_capacity(Yard *yard)
 	return yard->capacity;
 }
 
+/* Returns the amount of bytes used already
+ *
+ * Returns yard's offset if yard is not NULL.
+ *
+ * Returns:
+ * - SIZE_MAX if 'yard' is NULL.
+ * - yard's offset if 'yard' is not NULL.
+ *
+ * Notes:
+ *  - This function is meant to be used as a way to debug
+ *  the yards already created and it will not affect nor change
+ *  any aspect of the yard.
+ */
+size_t tiltyard_get_used_capacity(Yard *yard)
+{
+	if (!yard) return SIZE_MAX;
+	return yard->offset;
+}
+
 /* Return the amount of bytes available until the end of the yard
  *
- * Returns yard's available capacity if yard is not NULL.
+ * Returns yard's available capacity if 'yard' is not NULL.
  *
  * Returns:
  * - SIZE_MAX if 'yard' is NULL.
@@ -435,4 +445,96 @@ size_t tiltyard_get_available_capacity(Yard *yard)
 {
 	if (!yard) return SIZE_MAX;
 	return yard->capacity - yard->offset;
+}
+
+/* Return the closest allocation to the end of the yard.
+ *
+ * Returns yard's high_water if 'yard' is not NULL.
+ *
+ * Returns:
+ * - SIZE_MAX if 'yard' is NULL.
+ * - yard's high_water if 'yard' is not NULL.
+ *
+ * Notes:
+ *  - This function is meant to be used as a way to debug
+ *  the yards already created and it will not affect nor change
+ *  any aspect of the yard.
+ */
+size_t tiltyard_get_high_water(Yard *yard)
+{
+	if (!yard) return SIZE_MAX;
+	return yard->high_water;
+}
+
+/* Return the amount of allocations in the yard.
+ *
+ * Returns yard's alloc_count if yard is not NULL.
+ *
+ * Returns:
+ * - SIZE_MAX if 'yard' is NULL.
+ * - yard's alloc_count if 'yard' is not NULL.
+ *
+ * Notes:
+ *  - This function is meant to be used as a way to debug
+ *  the yards already created and it will not affect nor change
+ *  any aspect of the yard.
+ */
+size_t tiltyard_get_alloc_count(Yard *yard)
+{
+	if (!yard) return SIZE_MAX;
+	return yard->alloc_count;
+}
+
+/* Return the last allocation in the yard.
+ *
+ * Returns yard's last_alloc if yard is not NULL.
+ *
+ * Returns:
+ * - SIZE_MAX if 'yard' is NULL.
+ * - yard's last_alloc if 'yard' is not NULL.
+ *
+ * Notes:
+ *  - This function is meant to be used as a way to debug
+ *  the yards already created and it will not affect nor change
+ *  any aspect of the yard.
+ */
+size_t tiltyard_get_last_alloc(Yard *yard)
+{
+	if (!yard) return SIZE_MAX;
+	return yard->last_alloc;
+}
+
+/* Return all the stats of the yard.
+ *
+ * Returns TiltyardStats struct with the yard's stats.
+ *
+ * Returns:
+ * - TiltyardStats with all values zeroed if 'yard' is null.
+ * - TiltyardStats with all yard's stats if 'yard' is not null.
+ *
+ * Notes:
+ *  - This function is meant to be used as a way to debug
+ *  the yards already created and it will not affect nor change
+ *  any aspect of the yard.
+ */
+TiltyardStats tiltyard_get_stats(Yard *yard)
+{
+	TiltyardStats stats = {
+		.capacity = 0,
+		.used = 0,
+		.available = 0,
+		.high_water = 0,
+		.alloc_count = 0,
+		.last_alloc = 0,
+	};
+
+	if (!yard) return stats;
+	
+	stats.capacity = tiltyard_get_capacity(yard);
+	stats.used = tiltyard_get_used_capacity(yard);
+	stats.available = tiltyard_get_available_capacity(yard);
+	stats.high_water = tiltyard_get_high_water(yard);
+	stats.alloc_count = tiltyard_get_alloc_count(yard);
+	stats.last_alloc = tiltyard_get_last_alloc(yard);
+	return stats;
 }
