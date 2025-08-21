@@ -323,7 +323,8 @@ size_t tiltyard_get_marker(Yard *yard)
 /* Changes the current offset to 'marker'
  *
  * Changes the current offset to 'marker' as long
- * as 'yard' is not NULL and marker is <= the yard's capacity.
+ * as 'yard' is not NULL, marker < offset, and
+ * marker is <= the yard's capacity.
  *
  * Returns:
  * - Nothing
@@ -334,7 +335,7 @@ size_t tiltyard_get_marker(Yard *yard)
  */
 void tiltyard_reset_to(Yard *yard, size_t marker)
 {
-	if (!yard || marker > yard->capacity)
+	if (!yard || marker < yard->offset || marker > yard->capacity)
 		return;
 	
 	yard->offset = marker;
