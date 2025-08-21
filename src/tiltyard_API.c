@@ -132,7 +132,7 @@ void *tiltyard_alloc_aligned(Yard *yard, size_t size, size_t alignment)
 
 	size_t aligned_offset = (yard->offset + alignment - 1) & ~(alignment - 1);
 
-	if (aligned_offset + size > yard->capacity || size_add_overflow(aligned_offset, size))
+	if (size_add_overflow(aligned_offset, size) || aligned_offset + size > yard->capacity)
 		return NULL;
 
 	void *ptr = (char *)yard->base + aligned_offset;
@@ -310,8 +310,8 @@ void tiltyard_reset(Yard *yard)
  * - Current offset if 'yard' is not NULL.
  *
  * Notes:
- * - The user should check if the marker is SIZE_MAX
- *   as a way to check if this function worked as it is supposed to.
+ * - The user should take into account that even if 'yard'
+ *   is not NULL, marker can still be 0.
  */
 size_t tiltyard_get_marker(Yard *yard)
 {
@@ -335,7 +335,7 @@ size_t tiltyard_get_marker(Yard *yard)
  */
 void tiltyard_reset_to(Yard *yard, size_t marker)
 {
-	if (!yard || marker < yard->offset || marker > yard->high_water)
+	if (!yard || marker < yard->offset || marker > yard->offset)
 		return;
 	
 	yard->offset = marker;
