@@ -335,7 +335,7 @@ size_t tiltyard_get_marker(Yard *yard)
  */
 void tiltyard_reset_to(Yard *yard, size_t marker)
 {
-	if (!yard || marker < yard->offset || marker > yard->capacity)
+	if (!yard || marker < yard->offset || marker > yard->high_water)
 		return;
 	
 	yard->offset = marker;
