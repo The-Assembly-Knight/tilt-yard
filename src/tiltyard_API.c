@@ -57,7 +57,7 @@ Yard *tiltyard_create(size_t capacity)
 
 	yard->capacity = capacity;
 	yard->offset = 0;
-	yard->last_alloc = 0;
+	yard->last_alloc_offset = 0;
 	yard->high_water = 0;
 	yard->alloc_count = 0;
 	return yard;
@@ -136,7 +136,7 @@ void *tiltyard_alloc_aligned(Yard *yard, size_t size, size_t alignment)
 		return NULL;
 
 	void *ptr = (char *)yard->base + aligned_offset;
-	yard->last_alloc = yard->offset;
+	yard->last_alloc_offset = yard->offset;
 	yard->alloc_count++;
 	yard->offset = aligned_offset + size;
 	if (yard->offset > yard->high_water)
@@ -512,13 +512,13 @@ size_t tiltyard_get_alloc_count(Yard *yard)
 	return yard->alloc_count;
 }
 
-/* Return the last allocation in the yard.
+/* Return the last allocation's offset in the yard.
  *
- * Returns yard's last_alloc if yard is not NULL.
+ * Returns yard's last_alloc_offset if yard is not NULL.
  *
  * Returns:
  * - 0 if 'yard' is NULL.
- * - yard's last_alloc if 'yard' is not NULL.
+ * - yard's last_alloc_offset if 'yard' is not NULL.
  *
  * Notes:
  *  - This function is meant to be used as a way to debug
@@ -527,10 +527,10 @@ size_t tiltyard_get_alloc_count(Yard *yard)
  *  - Take into account that yard's last_alloc may be 0, which means
  *  that even if 'yard' is not NULL you still can get 0.
  */
-size_t tiltyard_get_last_alloc(Yard *yard)
+size_t tiltyard_get_last_alloc_offset(Yard *yard)
 {
 	if (!yard) return 0;
-	return yard->last_alloc;
+	return yard->last_alloc_offset;
 }
 
 /* Return all the stats of the yard.
@@ -554,7 +554,7 @@ TiltyardStats tiltyard_get_stats(Yard *yard)
 		.available = tiltyard_get_available_capacity(yard),
 		.high_water = tiltyard_get_high_water(yard),
 		.alloc_count = tiltyard_get_alloc_count(yard),
-		.last_alloc = tiltyard_get_last_alloc(yard),
+		.last_alloc_offset = tiltyard_get_last_alloc_offset(yard),
 	};
 	return stats;
 }

@@ -8,7 +8,7 @@ typedef struct {
 	size_t available;
 	size_t high_water;
 	size_t alloc_count;
-	size_t last_alloc;
+	size_t last_alloc_offset;
 } TiltyardStats;
 
 Yard *tiltyard_create(size_t capacity);
