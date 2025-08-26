@@ -11,7 +11,7 @@ typedef struct {
 	size_t last_alloc_offset;
 	size_t high_water;
 	size_t alloc_count;
-} Yard;
+} Arena;
 
 typedef struct {
 	size_t capacity;
@@ -22,34 +22,34 @@ typedef struct {
 	size_t last_alloc_offset;
 } TiltyardStats;
 
-Yard *tiltyard_create(size_t capacity);
+Arena *tiltyard_create(size_t capacity);
 
-void *tiltyard_alloc(Yard *yard, size_t size);
-void *tiltyard_calloc(Yard *yard, size_t size);
+void *tiltyard_alloc(Arena *arena, size_t size);
+void *tiltyard_calloc(Arena *arena, size_t size);
 
-void *tiltyard_alloc_aligned(Yard *yard, size_t size, size_t alignment);
-void *tiltyard_calloc_aligned(Yard *yard, size_t size, size_t alignment);
+void *tiltyard_alloc_aligned(Arena *arena, size_t size, size_t alignment);
+void *tiltyard_calloc_aligned(Arena *arena, size_t size, size_t alignment);
 
-void tiltyard_destroy(Yard *yard);
-void tiltyard_wipe(Yard *yard);
-void tiltyard_null(Yard **yard);
+void tiltyard_destroy(Arena *arena);
+void tiltyard_wipe(Arena *arena);
+void tiltyard_null(Arena **arena);
 
-void tiltyard_destroy_and_null(Yard **yard);
-void tiltyard_wipe_destroy_and_null(Yard **yard);
+void tiltyard_destroy_and_null(Arena **arena);
+void tiltyard_wipe_destroy_and_null(Arena **arena);
 
-void tiltyard_reset(Yard *yard);
+void tiltyard_reset(Arena *arena);
 
-size_t tiltyard_get_marker(Yard *yard);
-void tiltyard_reset_to(Yard *yard, size_t marker);
+size_t tiltyard_get_marker(Arena *arena);
+void tiltyard_reset_to(Arena *arena, size_t marker);
 
-void tiltyard_clean_until(Yard *yard, size_t marker);
-void tiltyard_clean_from(Yard *yard, size_t marker);
-void tiltyard_clean_from_until(Yard *yard, size_t marker_beg, size_t marker_end);
+void tiltyard_clean_until(Arena *arena, size_t marker);
+void tiltyard_clean_from(Arena *arena, size_t marker);
+void tiltyard_clean_from_until(Arena *arena, size_t marker_beg, size_t marker_end);
 
-size_t tiltyard_get_capacity(Yard *yard);
-size_t tiltyard_get_used_capacity(Yard *yard);
-size_t tiltyard_get_available_capacity(Yard *yard);
-size_t tiltyard_get_high_water(Yard *yard);
-size_t tiltyard_get_alloc_count(Yard *yard);
-size_t tiltyard_get_last_alloc(Yard *yard);
-TiltyardStats tiltyard_get_stats(Yard *yard);
+size_t tiltyard_get_capacity(Arena *arena);
+size_t tiltyard_get_used_capacity(Arena *arena);
+size_t tiltyard_get_available_capacity(Arena *arena);
+size_t tiltyard_get_high_water(Arena *arena);
+size_t tiltyard_get_alloc_count(Arena *arena);
+size_t tiltyard_get_last_alloc(Arena *arena);
+TiltyardStats tiltyard_get_stats(Arena *arena);

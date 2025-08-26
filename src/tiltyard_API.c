@@ -23,82 +23,82 @@ static inline int size_add_overflow(size_t a, size_t b)
 	return 0;
 }
 
-/* Create a new yard with size 'capacity'.
+/* Create a new arena with size 'capacity'.
  *
- * Create space in the heap for the yard
+ * Create space in the heap for the arena
  * through malloc
  *
  * Returns:
  * - A null pointer if the capacity is 0 or
- *   there is not enough memory in the heap for that capacity or the yard pointer.
- * - A pointer to a yard allocated in the heap if there is enough
+ *   there is not enough memory in the heap for that capacity or the arena pointer.
+ * - A pointer to a arena allocated in the heap if there is enough
  *   memory in the heap for the capacity given.
  *
  * Notes:
- * - Allocates memory in the heap through malloc 2 times, one for the yard
- *   and the other one for the base of the yard (capacity).
- * - The memory allocated in the heap for the yard and its base
+ * - Allocates memory in the heap through malloc 2 times, one for the arena
+ *   and the other one for the base of the arena (capacity).
+ * - The memory allocated in the heap for the arena and its base
  *   must be freed through tiltyard_destroy, tiltyard_destroy_and_null, or
  *   tiltyard_wipe_destroy_and_null functions.
  */
-Yard *tiltyard_create(size_t capacity)
+Arena *tiltyard_create(size_t capacity)
 {
 	if (capacity == 0)
 		return NULL;
 
-	Yard *yard = malloc(sizeof(Yard));
-	if (!yard) return NULL;
+	Arena *arena = malloc(sizeof(Arena));
+	if (!arena) return NULL;
 	
-	yard->base = malloc(capacity);
-	if (!yard->base) {
-		free(yard);
+	arena->base = malloc(capacity);
+	if (!arena->base) {
+		free(arena);
 		return NULL;
 	}
 
-	yard->capacity = capacity;
-	yard->offset = 0;
-	yard->last_alloc_offset = 0;
-	yard->high_water = 0;
-	yard->alloc_count = 0;
-	return yard;
+	arena->capacity = capacity;
+	arena->offset = 0;
+	arena->last_alloc_offset = 0;
+	arena->high_water = 0;
+	arena->alloc_count = 0;
+	return arena;
 }
 
-/* Allocate 'size' bytes from the yard with the default alignment
+/* Allocate 'size' bytes from the arena with the default alignment
  *
  * The default alignment is sizeof(void *).
  *
  * Returns:
- * - A pointer into the yard if there is enough capacity.
- * - NULL if there is not enough space or yard == NULL.
+ * - A pointer into the arena if there is enough capacity.
+ * - NULL if there is not enough space or arena == NULL.
  *
  * Notes:
  * - Does NOT call malloc/free; the returned pointer comes
- *   from the already allocated memory for the yard.
+ *   from the already allocated memory for the arena.
  * - The memory is uninitialized (use tiltyard_calloc if you need
  *   zeroed memory)
  */
-void *tiltyard_alloc(Yard *yard, size_t size)
+void *tiltyard_alloc(Arena *arena, size_t size)
 {
-	return tiltyard_alloc_aligned(yard, size, sizeof(void *));
+	return tiltyard_alloc_aligned(arena, size, sizeof(void *));
 }
 
-/* Allocate size bytes from the yard with the default alignment,
+/* Allocate size bytes from the arena with the default alignment,
  * and zero-initialize the memory.
  *
  * Same behavior as 'tiltyard_alloc' except:
  * - The returned memory is set to all zero bytes.
  *
  * Returns:
- * - A pointer into the yard if there is enough capacity.
- * - NULL if there is not enough space or yard == NULL.
+ * - A pointer into the arena if there is enough capacity.
+ * - NULL if there is not enough space or arena == NULL.
  *
  * Notes:
  * - Does NOT call malloc/free; the returned pointer comes
- *   from the already allocated memory for the yard.
+ *   from the already allocated memory for the arena.
  */
-void *tiltyard_calloc(Yard *yard, size_t size)
+void *tiltyard_calloc(Arena *arena, size_t size)
 {
-	void *ptr = tiltyard_alloc(yard, size);
+	void *ptr = tiltyard_alloc(arena, size);
 
 	if  (!ptr) return NULL;
 
@@ -106,45 +106,45 @@ void *tiltyard_calloc(Yard *yard, size_t size)
 	return ptr;
 }
 
-/* Allocate size bytes from the yard with a custom alignment.
+/* Allocate size bytes from the arena with a custom alignment.
  *
  * Same behavior as 'tiltyard_alloc' except:
  * - The memory is aligned based on 'alignment' instead of a
  *   default one.
  *
  * This function also assign stats such as last_alloc, alloc_count,
- * and high_water to the yard for each allocation.
+ * and high_water to the arena for each allocation.
  *
  * Returns:
- * - A pointer into the yard if there is enough capacity.
- * - NULL if there is not enough space or yard == NULL.
+ * - A pointer into the arena if there is enough capacity.
+ * - NULL if there is not enough space or arena == NULL.
  *
  * Notes:
  * - Does NOT call malloc/free; the returned pointer comes
- *   from the already allocated memory for the yard.
+ *   from the already allocated memory for the arena.
  * - The memory is uninitialized (use tiltyard_calloc_aligned if you need
  *   zeroed memory)
  */
-void *tiltyard_alloc_aligned(Yard *yard, size_t size, size_t alignment)
+void *tiltyard_alloc_aligned(Arena *arena, size_t size, size_t alignment)
 {
-	if (!yard || size == 0 || alignment == 0 || (alignment & (alignment - 1)) != 0)
+	if (!arena || size == 0 || alignment == 0 || (alignment & (alignment - 1)) != 0)
 		return NULL;
 
-	size_t aligned_offset = (yard->offset + alignment - 1) & ~(alignment - 1);
+	size_t aligned_offset = (arena->offset + alignment - 1) & ~(alignment - 1);
 
-	if (size_add_overflow(aligned_offset, size) || aligned_offset + size > yard->capacity)
+	if (size_add_overflow(aligned_offset, size) || aligned_offset + size > arena->capacity)
 		return NULL;
 
-	void *ptr = (char *)yard->base + aligned_offset;
-	yard->last_alloc_offset = yard->offset;
-	yard->alloc_count++;
-	yard->offset = aligned_offset + size;
-	if (yard->offset > yard->high_water)
-		yard->high_water = yard->offset;
+	void *ptr = (char *)arena->base + aligned_offset;
+	arena->last_alloc_offset = arena->offset;
+	arena->alloc_count++;
+	arena->offset = aligned_offset + size;
+	if (arena->offset > arena->high_water)
+		arena->high_water = arena->offset;
 	return ptr;
 }
 
-/* Allocate size bytes from the yard with a custom alignment,
+/* Allocate size bytes from the arena with a custom alignment,
  * and zero-initialize the memory.
  *
  * Same behavior as 'tiltyard_calloc' except:
@@ -152,16 +152,16 @@ void *tiltyard_alloc_aligned(Yard *yard, size_t size, size_t alignment)
  *   default one.
  *
  * Returns:
- * - A pointer into the yard if there is enough capacity.
- * - NULL if there is not enough space or yard == NULL.
+ * - A pointer into the arena if there is enough capacity.
+ * - NULL if there is not enough space or arena == NULL.
  *
  * Notes:
  * - Does NOT call malloc/free; the returned pointer comes
- *   from the already allocated memory for the yard.
+ *   from the already allocated memory for the arena.
  */
-void *tiltyard_calloc_aligned(Yard *yard, size_t size, size_t alignment)
+void *tiltyard_calloc_aligned(Arena *arena, size_t size, size_t alignment)
 {
-	void *ptr = tiltyard_alloc_aligned(yard, size, alignment);
+	void *ptr = tiltyard_alloc_aligned(arena, size, alignment);
 
 	if (!ptr) return NULL;
 
@@ -169,16 +169,16 @@ void *tiltyard_calloc_aligned(Yard *yard, size_t size, size_t alignment)
 	return ptr;
 }
 
-/* Frees yard and its based (which are allocated in the heap)
+/* Frees arena and its based (which are allocated in the heap)
  *
- * the yard's base and the yard itself will be freed using free
- * if 'yard' is not NULL.
+ * the arena's base and the arena itself will be freed using free
+ * if 'arena' is not NULL.
  *
  * Returns:
  * - Nothing
  *
  * Notes:
- * - The pointer to yard will still point to where it pointed, even
+ * - The pointer to arena will still point to where it pointed, even
  *   though the memory was already freed, in case you want to null the pointer
  *   please consider using 'tiltyard_null', 'tiltyard_destroy_and_null',
  *   or 'tiltyard_wipe_destroy_and_null'.
@@ -187,60 +187,60 @@ void *tiltyard_calloc_aligned(Yard *yard, size_t size, size_t alignment)
  *   wrote on that memory please consider using 'tiltyard_wipe'
  *   or 'tiltyard_wipe_destroy_and_null'
  */
-void tiltyard_destroy(Yard *yard) 
+void tiltyard_destroy(Arena *arena) 
 {
-	if (!yard) return;
+	if (!arena) return;
 
-	free(yard->base);
-	free(yard);
+	free(arena->base);
+	free(arena);
 }
 
-/* Zeroes all the memory in the yard.
+/* Zeroes all the memory in the arena.
  *
- * Uses memset to zero the entire yard if the 'yard' is not NULL
+ * Uses memset to zero the entire arena if the 'arena' is not NULL
  *
  * Returns:
  * - Nothing
  *
  * Notes:
  * - Take into account that this function will not free the memory allocated
- *   for the yard nor null the yard. In case you want to do any of those actions,
+ *   for the arena nor null the arena. In case you want to do any of those actions,
  *   please consider using 'tiltyard_wipe_destroy_and_null'.
  */
-void tiltyard_wipe(Yard *yard)
+void tiltyard_wipe(Arena *arena)
 {
-	if (!yard) return;
+	if (!arena) return;
 
-	memset(yard->base, 0, yard->capacity);
+	memset(arena->base, 0, arena->capacity);
 }
 
-/* Nulls the pointer to the yard given by the user.
+/* Nulls the pointer to the arena given by the user.
  *
- * Nulls 'yard' if 'yard' is not already NULL.
+ * Nulls 'arena' if 'arena' is not already NULL.
  *
  * Returns:
  * - Nothing
  *
  * Notes:
  * - Take into account that if the pointer is null
- *   there will not be any way to recover the yard, which
+ *   there will not be any way to recover the arena, which
  *   means there will not be any way to free it.
- * - If you want to free the yard, use this function after you used
+ * - If you want to free the arena, use this function after you used
  *   'tiltyard_destroy'.
- * - The yard will keep containing what was allocated before it was nulled,
+ * - The arena will keep containing what was allocated before it was nulled,
  *   so please make sure you use 'tiltyard_wipe' before this function
  *   or instead use 'tiltyard_wipe_destroy_and_null'.
  */
-void tiltyard_null(Yard **yard)
+void tiltyard_null(Arena **arena)
 {	
-	if (!yard) return;
+	if (!arena) return;
 
-	*yard = NULL;
+	*arena = NULL;
 }
 
-/* Destroys and nulls the yard in that order
+/* Destroys and nulls the arena in that order
  *
- * If the given yard is not NULL,
+ * If the given arena is not NULL,
  * combines the behaviors of 'tiltyard_destroy' and
  * 'tiltyard_null' in that order.
  *
@@ -248,24 +248,24 @@ void tiltyard_null(Yard **yard)
  * - Nothing.
  *
  * Notes:
- * - Take into account that the pointer to the yard
- *   will be null making it impossible to access the yard again.
+ * - Take into account that the pointer to the arena
+ *   will be null making it impossible to access the arena again.
  * - Take into account that this function will not prevent the memory
- *   where the yard was allocated to keep containing what it had before
+ *   where the arena was allocated to keep containing what it had before
  *   it was destroyed and null. In case you want to make sure the memory was
  *   zeroed use 'tiltyard_wipe_destroy_and_null'.
  */
-void tiltyard_destroy_and_null(Yard **yard)
+void tiltyard_destroy_and_null(Arena **arena)
 {
-	if (!yard || !*yard) return;
+	if (!arena || !*arena) return;
 
-	tiltyard_destroy(*yard);
-	tiltyard_null(yard);
+	tiltyard_destroy(*arena);
+	tiltyard_null(arena);
 }
 
-/* Wipes, destroys, and nulls the yard in that order.
+/* Wipes, destroys, and nulls the arena in that order.
  *
- * If 'yard' is not NULL, combines the behaviors of
+ * If 'arena' is not NULL, combines the behaviors of
  * 'tiltyard_wipe' and 'tiltyard_destroy_and_null' in
  * that order.
  *
@@ -273,80 +273,80 @@ void tiltyard_destroy_and_null(Yard **yard)
  * - Nothing
  *
  * Notes:
- * - Take into account that the pointer to the yard
- *   will be null making it impossible to access the yard again.
+ * - Take into account that the pointer to the arena
+ *   will be null making it impossible to access the arena again.
  */
-void tiltyard_wipe_destroy_and_null(Yard **yard)
+void tiltyard_wipe_destroy_and_null(Arena **arena)
 {
-	if (!yard || !*yard) return;
+	if (!arena || !*arena) return;
 
-	tiltyard_wipe(*yard);
-	tiltyard_destroy_and_null(yard);
+	tiltyard_wipe(*arena);
+	tiltyard_destroy_and_null(arena);
 }
 
 /* Resets the current offset to 0
  *
  * Allows the user to reuse the arena from the beginning
- * by resetting the offset to 0 if the 'yard' is not NULL.
+ * by resetting the offset to 0 if the 'arena' is not NULL.
  *
  * Returns:
  * - Nothing.
  *
  * Notes:
- * - Even though the user resets the yard, the yard will still
+ * - Even though the user resets the arena, the arena will still
  *   hold the data that was allocated into it.
- * - In case you want to reset the yard and reset all the data within it,
+ * - In case you want to reset the arena and reset all the data within it,
  *   you should use 'tiltyard_wipe' followed by this function.
  */
-void tiltyard_reset(Yard *yard)
+void tiltyard_reset(Arena *arena)
 {
-	if (yard) yard->offset = 0;
+	if (arena) arena->offset = 0;
 }
 
 /* Gets current offset as a marker.
  *
  * Returns:
- * - 0 if 'yard' is NULL.
- * - Current offset if 'yard' is not NULL.
+ * - 0 if 'arena' is NULL.
+ * - Current offset if 'arena' is not NULL.
  *
  * Notes:
- * - The user should take into account that even if 'yard'
+ * - The user should take into account that even if 'arena'
  *   is not NULL, marker can still be 0.
  */
-size_t tiltyard_get_marker(Yard *yard)
+size_t tiltyard_get_marker(Arena *arena)
 {
-	if (!yard) return 0;
+	if (!arena) return 0;
 
-	return yard->offset;
+	return arena->offset;
 }
 
 /* Changes the current offset to 'marker'
  *
  * Changes the current offset to 'marker' as long
- * as 'yard' is not NULL, marker < offset, and
- * marker is <= the yard's capacity.
+ * as 'arena' is not NULL, marker < offset, and
+ * marker is <= the arena's capacity.
  *
  * Returns:
  * - Nothing
  *
  * Notes:
  * - Even if the offset offset is reset to marker, 
- *   the yard will conserve the data it had before.
+ *   the arena will conserve the data it had before.
  */
-void tiltyard_reset_to(Yard *yard, size_t marker)
+void tiltyard_reset_to(Arena *arena, size_t marker)
 {
-	if (!yard || marker < yard->offset || marker > yard->offset)
+	if (!arena || marker < arena->offset || marker > arena->offset)
 		return;
 	
-	yard->offset = marker;
+	arena->offset = marker;
 }
 
-/* Zeroes all bytes from the beginning of the yard
+/* Zeroes all bytes from the beginning of the arena
  * to the marker.
  *
- * Zeroes all bytes from the beginning of the yard
- * to the marker using memset if yard is not NULL, marker is not 0,
- * and marker is not > yard's capacity.
+ * Zeroes all bytes from the beginning of the arena
+ * to the marker using memset if arena is not NULL, marker is not 0,
+ * and marker is not > arena's capacity.
  *
  * Returns:
  * - Nothing.
@@ -356,19 +356,19 @@ void tiltyard_reset_to(Yard *yard, size_t marker)
  *   any means, which means the user should think twice before using
  *   this function.
  */
-void tiltyard_clean_until(Yard *yard, size_t marker)
+void tiltyard_clean_until(Arena *arena, size_t marker)
 {
-	if (!yard || marker == 0 || marker > yard->capacity)
+	if (!arena || marker == 0 || marker > arena->capacity)
 		return;
 	
-	memset(yard->base, 0, marker);
+	memset(arena->base, 0, marker);
 }
 
-/* Zeroes all bytes from the maker to the end of the yard
+/* Zeroes all bytes from the maker to the end of the arena
  *
  * Zeroes all bytes from the maker
- * to the end of the yard  using memset
- * if yard is not NULL, and the marker is <= yard's capacity.
+ * to the end of the arena  using memset
+ * if arena is not NULL, and the marker is <= arena's capacity.
  *
  * Returns:
  * - Nothing.
@@ -378,20 +378,20 @@ void tiltyard_clean_until(Yard *yard, size_t marker)
  *   any means, which means the user should think twice before using
  *   this function.
  */
-void tiltyard_clean_from(Yard *yard, size_t marker)
+void tiltyard_clean_from(Arena *arena, size_t marker)
 {
-	if (!yard || marker >= yard->capacity)
+	if (!arena || marker >= arena->capacity)
 		return;
 	
-	memset((char *)yard->base + marker, 0, yard->capacity - marker);
+	memset((char *)arena->base + marker, 0, arena->capacity - marker);
 }
 
 /* Zeroes all bytes from 'maker_beg' to 'marker_end'
  *
  * Zeroes all bytes from 'maker_beg'
  * to 'marker_end'  using memset
- * if yard is not NULL, 'maker_beg' < 'maker_end',
- * 'marker_beg' < yard's capacity, and 'marker_end' <= yard's capacity.
+ * if arena is not NULL, 'maker_beg' < 'maker_end',
+ * 'marker_beg' < arena's capacity, and 'marker_end' <= arena's capacity.
  *
  * Returns:
  * - Nothing.
@@ -401,160 +401,160 @@ void tiltyard_clean_from(Yard *yard, size_t marker)
  *   any means, which means the user should think twice before using
  *   this function.
  */
-void tiltyard_clean_from_until(Yard *yard, size_t marker_beg, size_t marker_end)
+void tiltyard_clean_from_until(Arena *arena, size_t marker_beg, size_t marker_end)
 {
-	if (!yard || marker_beg >= marker_end || marker_beg >= yard->capacity || marker_end > yard->capacity)
+	if (!arena || marker_beg >= marker_end || marker_beg >= arena->capacity || marker_end > arena->capacity)
 		return;
 
-	memset((char *)yard->base + marker_beg, 0, marker_end - marker_beg);
+	memset((char *)arena->base + marker_beg, 0, marker_end - marker_beg);
 }
 
-/* Returns the capacity of the yard
+/* Returns the capacity of the arena
  *
- * Returns yard's capacity if yard is not NULL.
+ * Returns arena's capacity if arena is not NULL.
  *
  * Returns:
- * - 0 if 'yard' is NULL.
- * - yard's capacity if 'yard' is not NULL.
+ * - 0 if 'arena' is NULL.
+ * - arena's capacity if 'arena' is not NULL.
  *
  * Notes:
  *  - This function is meant to be used as a way to debug
  *  the yards already created and it will not affect nor change
- *  any aspect of the yard.
+ *  any aspect of the arena.
  */
-size_t tiltyard_get_capacity(Yard *yard)
+size_t tiltyard_get_capacity(Arena *arena)
 {
-	if (!yard) return 0;
-	return yard->capacity;
+	if (!arena) return 0;
+	return arena->capacity;
 }
 
 /* Returns the amount of bytes used already
  *
- * Returns yard's offset if yard is not NULL.
+ * Returns arena's offset if arena is not NULL.
  *
  * Returns:
- * - 0 if 'yard' is NULL.
- * - yard's offset if 'yard' is not NULL.
+ * - 0 if 'arena' is NULL.
+ * - arena's offset if 'arena' is not NULL.
  *
  * Notes:
  *  - This function is meant to be used as a way to debug
  *  the yards already created and it will not affect nor change
- *  any aspect of the yard.
- *  - Take into account that yard's used capacity may be 0, which means
- *  that even if 'yard' is not NULL you still can get 0.
+ *  any aspect of the arena.
+ *  - Take into account that arena's used capacity may be 0, which means
+ *  that even if 'arena' is not NULL you still can get 0.
  */
-size_t tiltyard_get_used_capacity(Yard *yard)
+size_t tiltyard_get_used_capacity(Arena *arena)
 {
-	if (!yard) return 0;
-	return yard->offset;
+	if (!arena) return 0;
+	return arena->offset;
 }
 
-/* Return the amount of bytes available until the end of the yard
+/* Return the amount of bytes available until the end of the arena
  *
- * Returns yard's available capacity if 'yard' is not NULL.
+ * Returns arena's available capacity if 'arena' is not NULL.
  *
  * Returns:
- * - 0 if 'yard' is NULL.
- * - yard's capacity - yard's offset if 'yard' is not NULL.
+ * - 0 if 'arena' is NULL.
+ * - arena's capacity - arena's offset if 'arena' is not NULL.
  *
  * Notes:
  *  - This function is meant to be used as a way to debug
  *  the yards already created and it will not affect nor change
- *  any aspect of the yard.
- *  - Take into account that yard's available capacity  may be 0, which means
- *  that even if 'yard' is not NULL you still can get 0.
+ *  any aspect of the arena.
+ *  - Take into account that arena's available capacity  may be 0, which means
+ *  that even if 'arena' is not NULL you still can get 0.
  */
-size_t tiltyard_get_available_capacity(Yard *yard)
+size_t tiltyard_get_available_capacity(Arena *arena)
 {
-	if (!yard) return 0;
-	return yard->capacity - yard->offset;
+	if (!arena) return 0;
+	return arena->capacity - arena->offset;
 }
 
-/* Return the closest allocation to the end of the yard.
+/* Return the closest allocation to the end of the arena.
  *
- * Returns yard's high_water if 'yard' is not NULL.
+ * Returns arena's high_water if 'arena' is not NULL.
  *
  * Returns:
- * - 0 if 'yard' is NULL.
- * - yard's high_water if 'yard' is not NULL.
+ * - 0 if 'arena' is NULL.
+ * - arena's high_water if 'arena' is not NULL.
  *
  * Notes:
  *  - This function is meant to be used as a way to debug
  *  the yards already created and it will not affect nor change
- *  any aspect of the yard.
- *  - Take into account that yard's high_water  may be 0, which means
- *  that even if 'yard' is not NULL you still can get 0.
+ *  any aspect of the arena.
+ *  - Take into account that arena's high_water  may be 0, which means
+ *  that even if 'arena' is not NULL you still can get 0.
  */
-size_t tiltyard_get_high_water(Yard *yard)
+size_t tiltyard_get_high_water(Arena *arena)
 {
-	if (!yard) return 0;
-	return yard->high_water;
+	if (!arena) return 0;
+	return arena->high_water;
 }
 
-/* Return the amount of allocations in the yard.
+/* Return the amount of allocations in the arena.
  *
- * Returns yard's alloc_count if yard is not NULL.
+ * Returns arena's alloc_count if arena is not NULL.
  *
  * Returns:
- * - 0 if 'yard' is NULL.
- * - yard's alloc_count if 'yard' is not NULL.
+ * - 0 if 'arena' is NULL.
+ * - arena's alloc_count if 'arena' is not NULL.
  *
  * Notes:
  *  - This function is meant to be used as a way to debug
  *  the yards already created and it will not affect nor change
- *  any aspect of the yard.
- *  - Take into account that yard's alloc_count  may be 0, which means
- *  that even if 'yard' is not NULL you still can get 0.
+ *  any aspect of the arena.
+ *  - Take into account that arena's alloc_count  may be 0, which means
+ *  that even if 'arena' is not NULL you still can get 0.
  */
-size_t tiltyard_get_alloc_count(Yard *yard)
+size_t tiltyard_get_alloc_count(Arena *arena)
 {
-	if (!yard) return 0;
-	return yard->alloc_count;
+	if (!arena) return 0;
+	return arena->alloc_count;
 }
 
-/* Return the last allocation's offset in the yard.
+/* Return the last allocation's offset in the arena.
  *
- * Returns yard's last_alloc_offset if yard is not NULL.
+ * Returns arena's last_alloc_offset if arena is not NULL.
  *
  * Returns:
- * - 0 if 'yard' is NULL.
- * - yard's last_alloc_offset if 'yard' is not NULL.
+ * - 0 if 'arena' is NULL.
+ * - arena's last_alloc_offset if 'arena' is not NULL.
  *
  * Notes:
  *  - This function is meant to be used as a way to debug
  *  the yards already created and it will not affect nor change
- *  any aspect of the yard.
- *  - Take into account that yard's last_alloc may be 0, which means
- *  that even if 'yard' is not NULL you still can get 0.
+ *  any aspect of the arena.
+ *  - Take into account that arena's last_alloc may be 0, which means
+ *  that even if 'arena' is not NULL you still can get 0.
  */
-size_t tiltyard_get_last_alloc_offset(Yard *yard)
+size_t tiltyard_get_last_alloc_offset(Arena *arena)
 {
-	if (!yard) return 0;
-	return yard->last_alloc_offset;
+	if (!arena) return 0;
+	return arena->last_alloc_offset;
 }
 
-/* Return all the stats of the yard.
+/* Return all the stats of the arena.
  *
- * Returns TiltyardStats struct with the yard's stats.
+ * Returns TiltyardStats struct with the arena's stats.
  *
  * Returns:
- * - TiltyardStats with all values zeroed if 'yard' is null.
- * - TiltyardStats with all yard's stats if 'yard' is not null.
+ * - TiltyardStats with all values zeroed if 'arena' is null.
+ * - TiltyardStats with all arena's stats if 'arena' is not null.
  *
  * Notes:
  *  - This function is meant to be used as a way to debug
  *  the yards already created and it will not affect nor change
- *  any aspect of the yard.
+ *  any aspect of the arena.
  */
-TiltyardStats tiltyard_get_stats(Yard *yard)
+TiltyardStats tiltyard_get_stats(Arena *arena)
 {
 	TiltyardStats stats = {
-		.capacity = tiltyard_get_capacity(yard),
-		.used = tiltyard_get_used_capacity(yard),
-		.available = tiltyard_get_available_capacity(yard),
-		.high_water = tiltyard_get_high_water(yard),
-		.alloc_count = tiltyard_get_alloc_count(yard),
-		.last_alloc_offset = tiltyard_get_last_alloc_offset(yard),
+		.capacity = tiltyard_get_capacity(arena),
+		.used = tiltyard_get_used_capacity(arena),
+		.available = tiltyard_get_available_capacity(arena),
+		.high_water = tiltyard_get_high_water(arena),
+		.alloc_count = tiltyard_get_alloc_count(arena),
+		.last_alloc_offset = tiltyard_get_last_alloc_offset(arena),
 	};
 	return stats;
 }
