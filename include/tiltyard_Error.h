@@ -5,6 +5,9 @@
 #define TILTYARD_ERROR_CODE_AMOUNT 7 
 #define TILTYARD_FUNC_AMOUNT 23
 
+#define TILTYARD_ERROR_HANDLING_FUNC_AMOUNT 2
+#define TILTYARD_ERROR_HANDLING_CODE_AMOUNT 1
+
 enum tiltyard_error_code {
 	EXCEEDED_ARENA_CAPACITY,
 	NULL_POINTER_TO_ARENA,
@@ -13,6 +16,8 @@ enum tiltyard_error_code {
 	SIZE_EQUALS_ZERO,
 	INVALID_ALIGNMENT,
 	ALIGNMENT_TOO_BIG,
+
+	TILTYARD_ERROR_HANDLING_ERROR,
 };
 
 enum tiltyard_func {
@@ -39,6 +44,10 @@ enum tiltyard_func {
 	TILTYARD_GET_ALLOC_COUNT,
 	TILTYARD_GET_LAST_ALLOC,
 	TILTYARD_GET_STATS,
+
+
+	GET_ERROR_CODE_STRING,
+	GET_FUNC_STRING,
 };
 
 void handle_error(const enum tiltyard_error_code tiltyard_error_code, const enum tiltyard_func in_func, const bool fatal);
