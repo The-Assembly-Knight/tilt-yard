@@ -45,15 +45,15 @@ static inline int size_add_overflow(size_t a, size_t b)
 Arena *tiltyard_create(size_t capacity)
 {
 	if (capacity == 0)
-		handle_error(SIZE_EQUALS_ZERO, TILTYARD_CREATE, true);
+		tiltyard_handle_error(SIZE_EQUALS_ZERO, TILTYARD_CREATE, true);
 
 	Arena *arena = malloc(sizeof(Arena));
-	if (!arena) handle_error(NOT_ENOUGH_SPACE_FOR_ARENA, TILTYARD_CREATE, true);
+	if (!arena) tiltyard_handle_error(NOT_ENOUGH_SPACE_FOR_ARENA, TILTYARD_CREATE, true);
 	
 	arena->base = malloc(capacity);
 	if (!arena->base) {
 		free(arena);
-		handle_error(NOT_ENOUGH_SPACE_FOR_SIZE_OF_ARENA, TILTYARD_CREATE, true);
+		tiltyard_handle_error(NOT_ENOUGH_SPACE_FOR_SIZE_OF_ARENA, TILTYARD_CREATE, true);
 	}
 
 	arena->capacity = capacity;
@@ -101,7 +101,7 @@ void *tiltyard_calloc(Arena *arena, size_t size)
 {
 	void *ptr = tiltyard_alloc(arena, size);
 
-	if  (!ptr) handle_error(EXCEEDED_ARENA_CAPACITY, TILTYARD_CALLOC, true);
+	if  (!ptr) tiltyard_handle_error(EXCEEDED_ARENA_CAPACITY, TILTYARD_CALLOC, true);
 
 	memset(ptr, 0, size);
 	return ptr;
@@ -129,15 +129,15 @@ void *tiltyard_calloc(Arena *arena, size_t size)
 void *tiltyard_alloc_aligned(Arena *arena, size_t size, size_t alignment)
 {
 	if (!arena)
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_ALLOC_ALIGNED, true);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_ALLOC_ALIGNED, true);
 
 	if (alignment == 0 || (alignment & (alignment - 1)) != 0)
-		handle_error(INVALID_ALIGNMENT, TILTYARD_ALLOC_ALIGNED, true);
+		tiltyard_handle_error(INVALID_ALIGNMENT, TILTYARD_ALLOC_ALIGNED, true);
 
 	size_t aligned_offset = (arena->offset + alignment - 1) & ~(alignment - 1);
 
 	if (size_add_overflow(aligned_offset, size) || aligned_offset + size > arena->capacity)
-		handle_error(ALIGNMENT_TOO_BIG, TILTYARD_ALLOC_ALIGNED, true);
+		tiltyard_handle_error(ALIGNMENT_TOO_BIG, TILTYARD_ALLOC_ALIGNED, true);
 
 	void *ptr = (char *)arena->base + aligned_offset;
 	arena->last_alloc_offset = arena->offset;
@@ -168,7 +168,7 @@ void *tiltyard_calloc_aligned(Arena *arena, size_t size, size_t alignment)
 	void *ptr = tiltyard_alloc_aligned(arena, size, alignment);
 
 	if (!ptr)
-		handle_error(EXCEEDED_ARENA_CAPACITY, TILTYARD_CALLOC_ALIGNED, true);
+		tiltyard_handle_error(EXCEEDED_ARENA_CAPACITY, TILTYARD_CALLOC_ALIGNED, true);
 
 	memset(ptr, 0, size);
 	return ptr;
@@ -195,7 +195,7 @@ void *tiltyard_calloc_aligned(Arena *arena, size_t size, size_t alignment)
 void tiltyard_destroy(Arena *arena) 
 {
 	if (!arena)
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_DESTROY, false);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_DESTROY, false);
 	else {
 
 		free(arena->base);
@@ -218,7 +218,7 @@ void tiltyard_destroy(Arena *arena)
 void tiltyard_wipe(Arena *arena)
 {
 	if (!arena)
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_WIPE, false);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_WIPE, false);
 
 	memset(arena->base, 0, arena->capacity);
 }
@@ -243,7 +243,7 @@ void tiltyard_wipe(Arena *arena)
 void tiltyard_null(Arena **arena)
 {	
 	if (!arena)
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_NULL, false);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_NULL, false);
 
 	*arena = NULL;
 }
@@ -268,7 +268,7 @@ void tiltyard_null(Arena **arena)
 void tiltyard_destroy_and_null(Arena **arena)
 {
 	if (!arena || !*arena)
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_DESTROY_AND_NULL, false);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_DESTROY_AND_NULL, false);
 
 	tiltyard_destroy(*arena);
 	tiltyard_null(arena);
@@ -290,7 +290,7 @@ void tiltyard_destroy_and_null(Arena **arena)
 void tiltyard_wipe_destroy_and_null(Arena **arena)
 {
 	if (!arena || !*arena)
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_WIPE_DESTROY_AND_NULL, false);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_WIPE_DESTROY_AND_NULL, false);
 
 	tiltyard_wipe(*arena);
 	tiltyard_destroy_and_null(arena);
@@ -313,7 +313,7 @@ void tiltyard_wipe_destroy_and_null(Arena **arena)
 void tiltyard_reset(Arena *arena)
 {
 	if (!arena)
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_RESET, true);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_RESET, true);
 	
 	arena->offset = 0;
 }
@@ -331,7 +331,7 @@ void tiltyard_reset(Arena *arena)
 size_t tiltyard_get_marker(Arena *arena)
 {
 	if (!arena)
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_GET_MARKER, true);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_GET_MARKER, true);
 
 	return arena->offset;
 }
@@ -352,10 +352,10 @@ size_t tiltyard_get_marker(Arena *arena)
 void tiltyard_reset_to(Arena *arena, size_t marker)
 {
 	if (!arena)
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_RESET_TO, true);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_RESET_TO, true);
 	
 	if (marker > arena->capacity || marker > arena->offset)
-		handle_error(OUT_OF_BOUNDS_MARKER, TILTYARD_RESET_TO, true);
+		tiltyard_handle_error(OUT_OF_BOUNDS_MARKER, TILTYARD_RESET_TO, true);
 	
 	arena->offset = marker;
 }
@@ -378,13 +378,13 @@ void tiltyard_reset_to(Arena *arena, size_t marker)
 void tiltyard_clean_until(Arena *arena, size_t marker)
 {
 	if (!arena)
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_CLEAN_UNTIL, true);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_CLEAN_UNTIL, true);
 
 	if (marker == 0)
 		return;
 
 	if (marker > arena->capacity)
-		handle_error(OUT_OF_BOUNDS_MARKER, TILTYARD_CLEAN_UNTIL, true);
+		tiltyard_handle_error(OUT_OF_BOUNDS_MARKER, TILTYARD_CLEAN_UNTIL, true);
 	
 	memset(arena->base, 0, marker);
 }
@@ -406,10 +406,10 @@ void tiltyard_clean_until(Arena *arena, size_t marker)
 void tiltyard_clean_from(Arena *arena, size_t marker)
 {
 	if (!arena)
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_CLEAN_FROM, true);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_CLEAN_FROM, true);
 
 	if (marker >= arena->capacity)
-		handle_error(OUT_OF_BOUNDS_MARKER, TILTYARD_CLEAN_FROM, true);
+		tiltyard_handle_error(OUT_OF_BOUNDS_MARKER, TILTYARD_CLEAN_FROM, true);
 	
 	memset((char *)arena->base + marker, 0, arena->capacity - marker);
 }
@@ -432,10 +432,10 @@ void tiltyard_clean_from(Arena *arena, size_t marker)
 void tiltyard_clean_from_until(Arena *arena, size_t marker_beg, size_t marker_end)
 {
 	if (!arena)
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_CLEAN_FROM_UNTIL, true);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_CLEAN_FROM_UNTIL, true);
 
 	if (marker_beg >= marker_end || marker_beg >= arena->capacity || marker_end > arena->capacity)
-		handle_error(OUT_OF_BOUNDS_MARKER, TILTYARD_CLEAN_FROM_UNTIL, true);
+		tiltyard_handle_error(OUT_OF_BOUNDS_MARKER, TILTYARD_CLEAN_FROM_UNTIL, true);
 
 	memset((char *)arena->base + marker_beg, 0, marker_end - marker_beg);
 }
@@ -456,7 +456,7 @@ void tiltyard_clean_from_until(Arena *arena, size_t marker_beg, size_t marker_en
 size_t tiltyard_get_capacity(Arena *arena)
 {
 	if (!arena) {
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_GET_CAPACITY, true);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_GET_CAPACITY, true);
 		return 0;
 	}
 
@@ -481,7 +481,7 @@ size_t tiltyard_get_capacity(Arena *arena)
 size_t tiltyard_get_used_capacity(Arena *arena)
 {
 	if (!arena) {
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_GET_USED_CAPACITY, true);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_GET_USED_CAPACITY, true);
 		return 0;
 	}
 
@@ -506,7 +506,7 @@ size_t tiltyard_get_used_capacity(Arena *arena)
 size_t tiltyard_get_available_capacity(Arena *arena)
 {
 	if (!arena) {
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_GET_AVAILABLE_CAPACITY, true);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_GET_AVAILABLE_CAPACITY, true);
 		return 0;
 	}
 
@@ -531,7 +531,7 @@ size_t tiltyard_get_available_capacity(Arena *arena)
 size_t tiltyard_get_high_water(Arena *arena)
 {
 	if (!arena) {
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_GET_HIGH_WATER, true);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_GET_HIGH_WATER, true);
 		return 0;
 	}
 
@@ -556,7 +556,7 @@ size_t tiltyard_get_high_water(Arena *arena)
 size_t tiltyard_get_alloc_count(Arena *arena)
 {
 	if (!arena) {
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_GET_ALLOC_COUNT, true);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_GET_ALLOC_COUNT, true);
 		return 0;
 	}
 
@@ -581,7 +581,7 @@ size_t tiltyard_get_alloc_count(Arena *arena)
 size_t tiltyard_get_last_alloc_offset(Arena *arena)
 {
 	if (!arena) {
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_GET_LAST_ALLOC, true);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_GET_LAST_ALLOC, true);
 		return 0;
 	}
 
@@ -604,7 +604,7 @@ size_t tiltyard_get_last_alloc_offset(Arena *arena)
 TiltyardStats tiltyard_get_stats(Arena *arena)
 {
 	if (!arena)
-		handle_error(NULL_POINTER_TO_ARENA, TILTYARD_GET_STATS, true);
+		tiltyard_handle_error(NULL_POINTER_TO_ARENA, TILTYARD_GET_STATS, true);
 
 	TiltyardStats stats = {
 		.capacity = tiltyard_get_capacity(arena),

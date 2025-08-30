@@ -48,7 +48,7 @@ static char *func_strings[TILTYARD_FUNC_AMOUNT + TILTYARD_ERROR_HANDLING_FUNC_AM
 static char *get_error_code_string(const enum tiltyard_error_code code)
 {
 	if (code > TILTYARD_ERROR_CODE_AMOUNT)
-		handle_error(TILTYARD_ERROR_HANDLING_ERROR, GET_ERROR_CODE_STRING, true);
+		tiltyard_handle_error(TILTYARD_ERROR_HANDLING_ERROR, GET_ERROR_CODE_STRING, true);
 
 	return error_code_strings[code];
 }
@@ -56,12 +56,12 @@ static char *get_error_code_string(const enum tiltyard_error_code code)
 static char *get_func_string(const enum tiltyard_func func)
 {
 	if (func > TILTYARD_FUNC_AMOUNT)
-		handle_error(TILTYARD_ERROR_HANDLING_ERROR, GET_FUNC_STRING, true);
+		tiltyard_handle_error(TILTYARD_ERROR_HANDLING_ERROR, GET_FUNC_STRING, true);
 
 	return func_strings[func];
 }
 
-void handle_error(const enum tiltyard_error_code error_code,
+void tiltyard_handle_error(const enum tiltyard_error_code error_code,
 		  const enum tiltyard_func in_func,
 		  const bool fatal
 )

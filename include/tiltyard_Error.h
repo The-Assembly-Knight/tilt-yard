@@ -51,4 +51,4 @@ enum tiltyard_func {
 	GET_FUNC_STRING,
 };
 
-void handle_error(const enum tiltyard_error_code tiltyard_error_code, const enum tiltyard_func in_func, const bool fatal);
+void tiltyard_handle_error(const enum tiltyard_error_code tiltyard_error_code, const enum tiltyard_func in_func, const bool fatal);
