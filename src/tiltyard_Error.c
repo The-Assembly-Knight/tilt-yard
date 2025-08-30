@@ -11,6 +11,7 @@ static char *error_code_strings[TILTYARD_ERROR_CODE_AMOUNT + TILTYARD_ERROR_HAND
 	"The size of an arena can not be <= 0",
 	"The alignment provided is not valid, alignments must be any natural power of two (1,2,4,8,...)",
 	"The alignment provided was too big for the arena's capacity",
+	"The marker provided is out of bounds (it is either greater than the current capacity or greater than the current offset)",
 
 	"There was an error with tiltyard's error handling (ironical, right?). Please make sure to take an screenshot or copy the error code and send it to the Github issues section, and I will probably fix it. Thanks for using tiltyard!"
 };
